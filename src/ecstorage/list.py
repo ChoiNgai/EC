@@ -1,26 +1,6 @@
 import numpy as np
-import ecstorage.mathematics.generator_matrix as generator
+from ecstorage.mathematics.generator_matrix import generator
 
-'''
-创建生成矩阵
-输入:
-    k:      数据个数
-    m:      校验块个数
-输出:
-    generator_matrix: 生成矩阵
-'''
-def generator_matrix_init(k,m,generator_method='vander'):
-    if generator_method == 'cauchy':
-        A = generator.cauchy_matrix(data,m)   #柯西矩阵(未实现)
-    elif generator_method == 'vander':
-        A = generator.vander_matrix(k,m)      #范德蒙德矩阵
-
-    else:
-        print("error")
-
-    generator_matrix = np.concatenate((np.mat(np.identity(k)), A), axis=0)
-    
-    return generator_matrix
 
 '''
 把数值修改成None
@@ -54,7 +34,7 @@ def reedsolomon(data,m,generator_matrix_case = 'cauchy',):
     k = len(data)
     
     # 产生生成矩阵
-    generator_matrix = generator_matrix_init(k,m)
+    generator_matrix = np.mat(generator(k,m))   #生成矩阵（matrix格式）
 
     check_block = generator_matrix.dot(data).tolist()[0]
     return check_block[-m:]
@@ -74,7 +54,7 @@ def verify(loss_data,check_block,generator_matrix_case = 'cauchy',arraytype = 'i
     m = len(check_block)
 
     # 生成矩阵
-    generator_matrix = generator_matrix_init(k,m)
+    generator_matrix = generator(k,m)
 
     # 删除生成矩阵(generator_matrix) 中对应缺失数据的行 
     check_data = loss_data + check_block

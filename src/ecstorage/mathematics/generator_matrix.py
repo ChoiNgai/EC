@@ -3,6 +3,26 @@ import numpy as np
 from . import galois
 
 '''
+创建生成矩阵
+输入:
+    k:      数据个数
+    m:      校验块个数
+输出:
+    generator_matrix: 生成矩阵
+'''
+def generator(k,m,generator_method='vander'):
+    if generator_method == 'cauchy':
+        A = cauchy_matrix(data,m)   #柯西矩阵(未实现)
+    elif generator_method == 'vander':
+        A = vander_matrix(k,m)      #范德蒙德矩阵
+    else:
+        print("error")
+
+    generator_matrix = np.concatenate((np.mat(np.identity(k)), A), axis=0)  # matrix格式
+
+    return generator_matrix
+
+'''
 范德蒙德矩阵
 '''
 def vander_matrix(k,m):

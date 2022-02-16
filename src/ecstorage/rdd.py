@@ -1,32 +1,8 @@
-import sys
-sys.path.append("/Users/caiwei/Documents/code/EC-dev/src")
-
 import numpy as np
 from pyspark import SparkContext
 from pyspark.mllib.linalg.distributed import *
-import ecstorage.mathematics.generator_matrix as generator
+from ecstorage.mathematics.generator_matrix import generator
 from ecstorage.mathematics.matrix_optimization import sparse
-
-'''
-创建生成矩阵
-输入:
-    k:      数据个数
-    m:      校验块个数
-输出:
-    generator_matrix: 生成矩阵
-'''
-def generator_matrix_init(k,m,generator_method='vander'):
-    if generator_method == 'cauchy':
-        A = generator.cauchy_matrix(data,m)   #柯西矩阵(未实现)
-    elif generator_method == 'vander':
-        A = generator.vander_matrix(k,m)      #范德蒙德矩阵
-
-    else:
-        print("error")
-
-    generator_matrix = np.array(np.concatenate((np.mat(np.identity(k)), A), axis=0))
-    
-    return generator_matrix
 
 '''
 把数值修改成None
@@ -64,7 +40,7 @@ def reedsolomon(sc,data,m,generator_matrix_case = 'cauchy',):
     # sc = SparkContext()
 
     # 产生生成矩阵
-    generator_matrix = generator_matrix_init(k,m)
+    generator_matrix = np.array(generator(k,m))
 
     generator_matrix = sc.parallelize(sparse(generator_matrix))     #将稠密矩阵转换为稀疏矩阵并创建RDD
 
@@ -89,7 +65,7 @@ def verify(loss_data,check_block,generator_matrix_case = 'cauchy',arraytype = 'i
     m = len(check_block)
 
     # 生成矩阵
-    generator_matrix = generator_matrix_init(k,m)
+    generator_matrix = generator(k,m)
 
     # 删除生成矩阵(generator_matrix) 中对应缺失数据的行 
     check_data = loss_data + check_block
@@ -115,12 +91,3 @@ def verify(loss_data,check_block,generator_matrix_case = 'cauchy',arraytype = 'i
         recover_data = recover_data.tolist()[0]
 
     return recover_data
-
-# # (numpy array格式)稠密矩阵转稀疏矩阵
-# def sparse(data):
-#     sparse_matrix = []
-#     i = j = 0
-#     for i in range(data.shape[0]):
-#         for j in range(data.shape[1]):
-#             sparse_matrix.append((i,j,data[i][j]))
-#     return sparse_matrix
