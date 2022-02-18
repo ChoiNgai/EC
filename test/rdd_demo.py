@@ -2,7 +2,6 @@
 import sys
 sys.path.append("/Users/caiwei/Documents/code/EC-dev/src")
 
-
 # 导入模块
 import ecstorage.rdd as ec
 from pyspark import SparkContext
@@ -21,18 +20,20 @@ sc = SparkContext()
 # sc.setLogLevel("WARN")
 spark = SparkSession(sc)
 data = np.arange(1,6,1)
+
+# 
 data = sc.parallelize(sparse(data))
 k = data.count()
 
 check_block = ec.reedsolomon(sc,data,m,generator_matrix)
 
 # test
+data = list(np.arange(1,6,1))
 data[0] = None          # 缺失数据（缺失个数小于等于m）
 data[1] = None
 data[2] = None
-print(data)
 # check_block[1] = None
-
+data = sc.parallelize(sparse(data))
 # 恢复数据
-recover_data = ec.verify(data,check_block,generator_matrix)
+recover_data = ec.verify(sc,data,check_block,generator_matrix)
 print(recover_data)
