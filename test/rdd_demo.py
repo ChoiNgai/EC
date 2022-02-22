@@ -26,7 +26,7 @@ data = sc.parallelize(data) #rdd格式数据
 check_block = ec.reedsolomon(sc,data,m,generator_matrix)
 
 # 测试
-data = list(np.arange(1,6,1))
+data = list(np.arange(1,6,1))   #换成list格式方便填补None值
 data[0] = None          # 缺失数据（缺失个数小于等于m）
 data[1] = None
 # data[2] = None

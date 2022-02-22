@@ -2,8 +2,6 @@ import numpy as np
 from pyspark.mllib.linalg.distributed import *
 from ecstorage.mathematics.generator_matrix import generator
 from ecstorage.mathematics.matrix_optimization import *
-# from ecstorage.mathematics.matrix_optimization import dense
-# from ecstorage.mathematics.matrix_optimization import  MatrixEntrytoArray
 
 '''
 把数值修改成None
@@ -35,7 +33,7 @@ def none_enough(check_data,loss_idx,m):
     generator_matrix: 生成矩阵
     generator_matrix.dot(data): 数据块+校验块
 '''
-def reedsolomon(sc,data,m,generator_matrix_case = 'cauchy',):
+def reedsolomon(sc,data,m,generator_matrix_case = 'cauchy'):
     data = sc.parallelize( sparse(np.array(data.collect() ))  )
     
     k = data.count()
@@ -83,6 +81,8 @@ def verify(sc,loss_data,check_block,generator_matrix_case = 'cauchy',arraytype =
 
     check_data = np.array(loss_data).tolist() + np.array(check_block.collect()).tolist()
 
+    # nan替换成None
+    check_data = nanreplce(check_data)
     loss_idx = np.where(np.array(check_data) == None)[0]
 
     # 如果None不够就删掉一些好让后续生成矩阵是方阵求逆

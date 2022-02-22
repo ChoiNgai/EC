@@ -1,4 +1,6 @@
 import numpy as np
+import math
+
 # (numpy array格式)稠密矩阵 转 稀疏矩阵
 def sparse(data):
     
@@ -85,4 +87,26 @@ def approximateintegertointeger(data):
     for i in range(len(data)):
         if abs( data[i] - round(data[i]) ) < 10**-8:
             data[i] = int( round(data[i]) )
+    return data
+
+
+'''
+nan 替换成 None
+输入:
+    data (list格式)
+输出:
+    data (list格式)
+'''
+def nanreplce(data):
+    for i in range(len(data)):
+
+        # None 不能用math.isnan()判断
+        try:
+            if math.isnan(data[i]):     
+                data[i] = None
+        except:
+            continue
+        else:
+            continue
+        
     return data
