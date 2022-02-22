@@ -1,8 +1,9 @@
 import numpy as np
 from pyspark.mllib.linalg.distributed import *
 from ecstorage.mathematics.generator_matrix import generator
-from ecstorage.mathematics.matrix_optimization import sparse
-from ecstorage.mathematics.matrix_optimization import dense
+from ecstorage.mathematics.matrix_optimization import *
+# from ecstorage.mathematics.matrix_optimization import dense
+# from ecstorage.mathematics.matrix_optimization import  MatrixEntrytoArray
 
 '''
 把数值修改成None
@@ -62,22 +63,23 @@ def verify(sc,loss_data,check_block,generator_matrix_case = 'cauchy',arraytype =
 
     k = loss_data.count()
     m = check_block.count()
-    check_bolck = check_bolck.toRowMatrix()
 
     # 生成矩阵
-    generator_matrix = generator(k,m)
+    generator_matrix = np.array(generator(k,m))
 
-    # 删除生成矩阵(generator_matrix) 中对应缺失数据的行 
-    check_data = loss_data.union(check_block)   #写到这（明天继续）
+    check_block = MatrixEntrytoArray(check_block)   # 元素全为MatrixEntry的RDD 转 list
+    check_block = dense(np.array(check_block))   #稀疏矩阵格式 转 稠密矩阵格式
 
-    check_data = dense(check_data.collect())   #稀疏矩阵格式 转 稠密矩阵格式
-    # check_data = loss_data + check_block
+    loss_data = dense(loss_data.collect())
+
+    check_data = loss_data.tolist() + check_block.tolist()
 
     loss_idx = np.where(np.array(check_data) == None)[0]
 
     # 如果None不够就删掉一些好让后续生成矩阵是方阵求逆
     check_data,loss_idx = none_enough(np.array(check_data),loss_idx,m)
             
+    # 删除生成矩阵(generator_matrix) 中对应缺失数据的行 
     generator_matrix = np.delete(generator_matrix,loss_idx, axis = 0)
 
     # 删除数据中值为None的数据
@@ -90,5 +92,7 @@ def verify(sc,loss_data,check_block,generator_matrix_case = 'cauchy',arraytype =
     check_data = CoordinateMatrix(check_data).toBlockMatrix()
 
     recover_data = generator_matrix.multiply(check_data).toCoordinateMatrix().entries.collect()
+    print(recover_data)
+    recover_data = tuplefirstvalue( MatrixEntrytoArray(sc.parallelize(recover_data)) )
 
     return recover_data

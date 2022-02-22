@@ -15,27 +15,61 @@ def sparse(data):
                 sparse_matrix.append((i,j,data[i][j]))
     return sparse_matrix
 
-# (numpy array格式)稀疏矩阵 转 稠密矩阵
-# 注:只支持以行数小的在前面这种格式的转换,例如支持[(0,0,0), (1, 0, 0)], 不支持[(1,0,0), (0,0,0)],即输入稀疏矩阵的排序规则需要符合order by row,col
+'''
+(numpy array格式)稀疏矩阵 转 稠密矩阵
+注:该函数只支持一行转为结果为一行的稠密矩阵
+只支持以行数小的在前面这种格式的转换,
+例如支持[(0,0,0), (1, 0, 0)], 不支持[(1,0,0), (0,0,0)],
+即输入稀疏矩阵的排序规则需要符合order by row,col
+'''
 def dense(data):
     dense_matrix = np.array([])
-    row = 0         #行索引
-    tmp_row = []    #保存同一行的值
+    tmp = []
     for i in range(len(data)):
-        if data[i][0] == row:
-            tmp_row.append(data[i][2])
-        else:
-            dense_matrix = np.insert(tmp_row, 0, values=dense_matrix, axis=0)
-            row += 1
-            tmp_row = []
-    dense_matrix = np.insert(tmp_row, 0, values=dense_matrix, axis=0)
+            tmp.append(data[i][2])
+    dense_matrix = np.insert(tmp, 0, values=dense_matrix, axis=0)
     return dense_matrix
 
 '''
-将元素全为MatrixEntrytoArray类型的 RDD 转为 array
+将元素全为MatrixEntrytoArray类型的 RDD 转为 list
 '''
 def MatrixEntrytoArray(data):
     data = data.collect()
     data_new = []
     for i in range(len(data)):
-        data_new.append( tuple(str(data[i]).replace('MatrixEntry','')) )
+        # list(map(int,str(data[i]).replace('MatrixEntry','')[1:-1].split(',') ))   #这样float型转换不了
+        
+        xyz = str(data[i]).replace('MatrixEntry','')[1:-1].split(',')
+        xyz = [intorfloat(i) for i in xyz]          #强制int型
+        data_new.append( tuple(xyz) ) 
+    return data_new
+'''
+字符串转为int/float/double类型,优先int
+输入:
+    data(字符串类型)
+输出:
+    data(int/float型)
+'''
+def intorfloat(data):
+    if type(data) == int:
+        data = int(data)
+    elif type(data) == float and int(data) - data == 0:
+        data = int(data)
+    else:
+        data = float(data)
+    return data
+
+
+'''
+取list中每个元组的首个数值
+输入:
+    data(list格式,元素为元组)
+输出:
+    data(list格式,元素为值)
+'''
+def tuplefirstvalue(data):
+    data_new = []
+    for i in range(len(data)):
+        data_new.append( intorfloat(data[i][2]) )
+
+    return data_new
