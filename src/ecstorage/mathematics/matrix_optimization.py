@@ -59,7 +59,6 @@ def intorfloat(data):
         data = float(data)
     return data
 
-
 '''
 取list中每个元组的首个数值
 输入:
@@ -73,3 +72,17 @@ def tuplefirstvalue(data):
         data_new.append( intorfloat(data[i][2]) )
 
     return data_new
+
+'''
+结果近似为整数的,返回整数
+
+输入:
+    data (list格式)
+输出:
+    data (list格式)
+'''
+def approximateintegertointeger(data):
+    for i in range(len(data)):
+        if abs( data[i] - round(data[i]) ) < 10**-8:
+            data[i] = int( round(data[i]) )
+    return data

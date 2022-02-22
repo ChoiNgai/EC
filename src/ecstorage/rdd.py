@@ -48,7 +48,12 @@ def reedsolomon(sc,data,m,generator_matrix_case = 'cauchy',):
     generator_matrix = CoordinateMatrix(generator_matrix).toBlockMatrix()
     check_block = generator_matrix.multiply(data).toCoordinateMatrix().entries.collect()    # MatrixEntry格式
     
-    return sc.parallelize(check_block[-m:])
+    # 格式转换
+    check_block = sc.parallelize(check_block[-m:])
+    check_block = MatrixEntrytoArray(check_block)   # 元素全为MatrixEntry的RDD 转 list
+    check_block = sc.parallelize(dense(np.array(check_block)).tolist())   #稀疏矩阵格式 转 稠密矩阵格式
+    
+    return check_block
 
 '''
 恢复数据
@@ -61,18 +66,20 @@ def reedsolomon(sc,data,m,generator_matrix_case = 'cauchy',):
 '''
 def verify(sc,loss_data,check_block,generator_matrix_case = 'cauchy',arraytype = 'int',outtype='list'):
 
+    if arraytype == 'int':
+        arraytype = np.int
+    else:
+        arraytype = np.float32
+
     k = loss_data.count()
     m = check_block.count()
 
     # 生成矩阵
-    generator_matrix = np.array(generator(k,m))
-
-    check_block = MatrixEntrytoArray(check_block)   # 元素全为MatrixEntry的RDD 转 list
-    check_block = dense(np.array(check_block))   #稀疏矩阵格式 转 稠密矩阵格式
+    generator_matrix = np.array(generator(k,m)).astype(arraytype)
 
     loss_data = dense(loss_data.collect())
 
-    check_data = loss_data.tolist() + check_block.tolist()
+    check_data = np.array(loss_data).tolist() + np.array(check_block.collect()).tolist()
 
     loss_idx = np.where(np.array(check_data) == None)[0]
 
@@ -83,16 +90,24 @@ def verify(sc,loss_data,check_block,generator_matrix_case = 'cauchy',arraytype =
     generator_matrix = np.delete(generator_matrix,loss_idx, axis = 0)
 
     # 删除数据中值为None的数据
-    check_data = np.delete(check_data,loss_idx, axis = 0)
-
-    generator_matrix = sc.parallelize(sparse( np.linalg.inv(generator_matrix) ))     #将稠密矩阵求逆后转换为稀疏矩阵并创建RDD
+    check_data = np.delete(check_data,loss_idx, axis = 0).astype(arraytype)
     check_data = sc.parallelize(sparse(check_data))
 
+    # 求生成矩阵逆矩阵并处理数据格式
+    generator_matrix  = sparse( np.linalg.inv(generator_matrix) )       #生成矩阵逆矩阵（稀疏矩阵格式）
+    generator_matrix = sc.parallelize(  generator_matrix  )     #创建RDD
+
+    # 矩阵计算
     generator_matrix = CoordinateMatrix(generator_matrix).toBlockMatrix()
     check_data = CoordinateMatrix(check_data).toBlockMatrix()
 
     recover_data = generator_matrix.multiply(check_data).toCoordinateMatrix().entries.collect()
-    print(recover_data)
+
     recover_data = tuplefirstvalue( MatrixEntrytoArray(sc.parallelize(recover_data)) )
+
+    # 如果值为近似整数,则转为整数
+    if arraytype == np.int:
+        recover_data = approximateintegertointeger(recover_data)
+    recover_data = sc.parallelize(recover_data)
 
     return recover_data
