@@ -21,11 +21,43 @@
 pip install ec-storage
 ```
 
+
+
 ## manual
 
-### list格式计算（单机版）
+### 导入模块
+
+<kbd>ec-storage</kbd>提供了适合三种数据格式的计算方式，分别为`list`、`rdd`、`dataframe`（开发中），根据需要选择其中一种即可
+
+```
+import ecstorage.list as ec
+import ecstorage.rdd as ec
+import ecstorage.dataframe as ec
+```
+
+> 为了方便后续的书写，建议将导入ec-storage的list或rdd或dataframe命名为ec，如上述代码块所示
+
+### 生成校验块
 
 ```python
+check_block = ec.reedsolomon(sc,data,m,generator_matrix)
+```
+
+> 这个ec需要与上面选择的接口一致（选择<kbd>list</kbd>接口则可以去掉sc这个参数）
+
+### 恢复数据
+
+```python
+recover_data = ec.verify(data,check_block)
+```
+
+> recover_data 与 data 相同
+
+### demo
+
+#### list格式计算（单机版）
+
+```##python
 # 本地文件夹测试导入
 # import sys
 # sys.path.append("/Users/caiwei/Documents/code/EC-dev/src")
@@ -53,9 +85,7 @@ recover_data = ec.verify(data,check_block,generator_matrix)	#恢复数据(list�
 print(recover_data)		#[1, 0, 0, 8, 6]
 ```
 
-
-
-### RDD格式计算（分布式版）
+#### RDD格式计算（分布式版）
 
 ```python
 # #本地文件夹测试导入
