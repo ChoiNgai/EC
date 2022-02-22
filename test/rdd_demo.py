@@ -20,14 +20,12 @@ sc = SparkContext()
 # sc.setLogLevel("WARN")
 spark = SparkSession(sc)
 data = np.arange(1,6,1)
+data = sc.parallelize(data) #rdd格式数据
 
-# e
-data = sc.parallelize(sparse(data))
-k = data.count()
-
+# 生成校验块
 check_block = ec.reedsolomon(sc,data,m,generator_matrix)
 
-# test
+# 测试
 data = list(np.arange(1,6,1))
 data[0] = None          # 缺失数据（缺失个数小于等于m）
 data[1] = None
@@ -35,7 +33,7 @@ data[1] = None
 check_block = check_block.collect()
 check_block[0] = None
 check_block = sc.parallelize(check_block)
-data = sc.parallelize(sparse(data))
+data = sc.parallelize(data)
 
 # 恢复数据
 recover_data = ec.verify(sc,data,check_block,generator_matrix)  

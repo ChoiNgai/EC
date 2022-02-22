@@ -36,7 +36,8 @@ def none_enough(check_data,loss_idx,m):
     generator_matrix.dot(data): 数据块+校验块
 '''
 def reedsolomon(sc,data,m,generator_matrix_case = 'cauchy',):
-
+    data = sc.parallelize( sparse(np.array(data.collect() ))  )
+    
     k = data.count()
 
     # 产生生成矩阵
@@ -65,6 +66,7 @@ def reedsolomon(sc,data,m,generator_matrix_case = 'cauchy',):
     outtype: 输出类型(缺省值),默认是list类型
 '''
 def verify(sc,loss_data,check_block,generator_matrix_case = 'cauchy',arraytype = 'int',outtype='list'):
+    loss_data = sc.parallelize( sparse(np.array(loss_data.collect() ))  )
 
     if arraytype == 'int':
         arraytype = np.int
