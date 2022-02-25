@@ -5,7 +5,7 @@ with open("readme.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="ec-storage",
-    version="0.1.2",
+    version="1.0.0",
     author="CAIWEI",
     author_email="caiwei-email@qq.com",
     description="ec-storage,it is used to replace the three copy storage strategy of HDFS, so as to save storage space",
